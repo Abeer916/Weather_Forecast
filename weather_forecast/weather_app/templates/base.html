@@ -20,9 +20,9 @@
 			<hr>
 			<ul class="nav nav-pills flex-column mb-auto gap-1">
 				<li class="nav-item"><a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">Home</a></li>
-				<li><a href="/analysis/" class="nav-link {% if request.path.startswith('/analysis') %}active{% endif %}">Trends & Analysis</a></li>
-				<li><a href="/forecast/" class="nav-link {% if request.path.startswith('/forecast') %}active{% endif %}">Forecast</a></li>
-				<li><a href="/compare/" class="nav-link {% if request.path.startswith('/compare') %}active{% endif %}">Compare</a></li>
+				<li><a href="/analysis/" class="nav-link {% if '/analysis' in request.path %}active{% endif %}">Trends & Analysis</a></li>
+				<li><a href="/forecast/" class="nav-link {% if '/forecast' in request.path %}active{% endif %}">Forecast</a></li>
+				<li><a href="/compare/" class="nav-link {% if '/compare' in request.path %}active{% endif %}">Compare</a></li>
 			</ul>
 			<hr>
 			<div class="text-muted small">© {{ today|date:'Y' }} WeatherDash</div>

@@ -24,12 +24,12 @@ os.makedirs(PLOTS_DIR, exist_ok=True)
 
 def _normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
 	mapping = {
-		"date": ["date", "Date", "day"],
+		"date": ["date", "Date", "day", "timestamp", "datetime"],
 		"temperature": ["temperature", "temp", "temp_c", "mean_temp", "avg_temp"],
 		"humidity": ["humidity", "hum", "relative_humidity"],
 		"pressure": ["pressure", "press", "barometric_pressure"],
 		"rainfall": ["rainfall", "rain", "precipitation", "precip"],
-		"wind_speed": ["wind_speed", "wind", "windspd", "wind_speed_kmh"],
+		"wind_speed": ["wind_speed", "wind", "windspd", "wind_speed_kmh", "wind speed"],
 	}
 	df_cols = {c.lower(): c for c in df.columns}
 	normalized = {}
@@ -39,32 +39,46 @@ def _normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
 				normalized[target] = df_cols[alias.lower()]
 				break
 	
-	renamed = {
-		v: k
-		for k, v in normalized.items()
-	}
+	renamed = {v: k for k, v in normalized.items()}
 	return df.rename(columns=renamed)
 
 
 def load_and_clean_data(path: str = DATA_PATH) -> pd.DataFrame:
-	df = pd.read_csv(path)
+	# Accept both file paths and Django UploadedFile objects
+	if hasattr(path, "read"):
+		# file-like
+		df = pd.read_csv(path)
+	else:
+		df = pd.read_csv(path)
+
 	df = _normalize_columns(df)
+
+	# Create a date column if missing by using a synthetic daily index
 	if "date" not in df.columns:
-		raise ValueError("Input dataset must include a date column (detected after normalization).")
-	
-	df["date"] = pd.to_datetime(df["date"], errors="coerce")
-	df = df.dropna(subset=["date"])  # must have date
-	
+		start = pd.Timestamp("2006-01-01")
+		idx = pd.date_range(start=start, periods=len(df), freq="D")
+		df.insert(0, "date", idx)
+	else:
+		df["date"] = pd.to_datetime(df["date"], errors="coerce")
+		df = df.dropna(subset=["date"])  # must have date if present
+
+	# Coerce numeric columns
 	for col in ["temperature", "humidity", "pressure", "rainfall", "wind_speed"]:
 		if col in df.columns:
-			df[col] = pd.to_numeric(df[col], errors="coerce")
-	
-	# Strategy: fill numeric NaNs with column median, then drop remaining empty rows
+			# Special handling for rainfall that may be categorical (e.g., 'rain'/'no rain')
+			if col == "rainfall" and df[col].dtype == object:
+				lower = df[col].astype(str).str.strip().str.lower()
+				df[col] = np.where(lower.isin(["rain", "raining", "yes", "1", "true"]), 1.0,
+								 np.where(lower.isin(["no rain", "no", "0", "false", "clear"]), 0.0, np.nan))
+			else:
+				df[col] = pd.to_numeric(df[col], errors="coerce")
+
+	# Fill numeric NaNs with column median, then drop remaining empties
 	numeric_cols = [c for c in ["temperature", "humidity", "pressure", "rainfall", "wind_speed"] if c in df.columns]
 	for c in numeric_cols:
 		median_val = df[c].median()
 		df[c] = df[c].fillna(median_val)
-	
+
 	df = df.dropna()
 	df = df.sort_values("date").reset_index(drop=True)
 	return df
@@ -111,8 +125,18 @@ def _timestamped_filename(prefix: str) -> str:
 def plot_temperature_trend(df: pd.DataFrame) -> str:
 	if "temperature" not in df.columns:
 		return ""
+	# Downsample for readability on large datasets
+	df_ts = df[["date", "temperature"]].copy()
+	if len(df_ts) > 400:
+		weekly = df_ts.set_index("date").resample("W").mean().reset_index()
+		plot_df = weekly
+		rolling = plot_df["temperature"].rolling(window=6, min_periods=1).mean()
+	else:
+		plot_df = df_ts
+		rolling = plot_df["temperature"].rolling(window=7, min_periods=1).mean()
 	plt.figure(figsize=(10, 4))
-	plt.plot(df["date"], df["temperature"], color="#1d4ed8")
+	plt.plot(plot_df["date"], plot_df["temperature"], color="#93c5fd", linewidth=1)
+	plt.plot(plot_df["date"], rolling, color="#1d4ed8", linewidth=2)
 	plt.title("Temperature Trend Over Time")
 	plt.xlabel("Date")
 	plt.ylabel("Temperature")

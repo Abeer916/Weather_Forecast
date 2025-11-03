@@ -1,6 +1,18 @@
 # Weather Forecast Data Dashboard (Django + Pandas + NumPy + Matplotlib)
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Abeer916/Weather_Forecast?quickstart=1)
+
 A full-stack weather analytics dashboard using Django, Pandas, NumPy, and Matplotlib. It loads a Kaggle CSV from `weather_app/static/data/`, cleans and analyzes the data, renders charts to `weather_app/static/plots/`, and displays a modern responsive UI.
+
+## One-click Run (GitHub Codespaces)
+- Click the badge above or open: `https://codespaces.new/Abeer916/Weather_Forecast?quickstart=1`
+- After the Codespace starts, run the task:
+  - Press Ctrl+Shift+P → "Tasks: Run Task" → "Run Django Server"
+  - Or run in terminal:
+    ```bash
+    python weather_forecast/manage.py runserver 0.0.0.0:8000
+    ```
+- Open the forwarded URL on port 8000.
 
 ## Features
 - Load historical weather CSV (date, temperature, humidity, pressure, rainfall, wind_speed)
@@ -12,7 +24,7 @@ A full-stack weather analytics dashboard using Django, Pandas, NumPy, and Matplo
 - JSON API endpoint for summarized stats
 - Optional compare view to upload and compare two datasets
 
-## Quickstart
+## Quickstart (Local)
 
 1) Create and activate a virtual environment
 ```bash
