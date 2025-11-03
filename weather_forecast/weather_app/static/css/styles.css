@@ -1,0 +1,13 @@
+:root{--brand: #6366f1}
+.card{border:0;border-radius:14px}
+.card .card-header{background:#fff;border-bottom:1px solid rgba(0,0,0,.06);border-top-left-radius:14px;border-top-right-radius:14px}
+.nav-link{transition: all .2s}
+.nav-link:hover{transform: translateX(2px)}
+.bg-gradient{background: linear-gradient(180deg,#f8fafc,#eef2ff)!important}
+img{max-width:100%}
+
+html[data-bs-theme='dark'] body{background:#0b1020;color:#e4e8f1}
+html[data-bs-theme='dark'] .card{background:#0f172a}
+html[data-bs-theme='dark'] .card .card-header{background:#0f172a;border-color:rgba(255,255,255,.08)}
+html[data-bs-theme='dark'] nav.bg-gradient{background: linear-gradient(180deg,#0b1020,#111827)!important}
+

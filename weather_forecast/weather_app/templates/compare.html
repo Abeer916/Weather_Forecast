@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Compare • WeatherDash{% endblock %}
+{% block content %}
+	<div class="card shadow-sm mb-3">
+		<div class="card-body">
+			<form method="post" enctype="multipart/form-data" class="row g-3">
+				{% csrf_token %}
+				<div class="col-12 col-md-5">
+					<label class="form-label">Dataset A</label>
+					<input class="form-control" type="file" name="file1" accept=".csv">
+				</div>
+				<div class="col-12 col-md-5">
+					<label class="form-label">Dataset B</label>
+					<input class="form-control" type="file" name="file2" accept=".csv">
+				</div>
+				<div class="col-12 col-md-2 d-flex align-items-end">
+					<button class="btn btn-primary w-100" type="submit">Compare</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	{% if results %}
+	<div class="row g-3">
+		{% for r in results %}
+		<div class="col-12 col-lg-6">
+			<div class="card shadow-sm h-100">
+				<div class="card-header fw-semibold">{{ r.label }}</div>
+				<div class="card-body">
+					{% if r.error %}
+					<div class="alert alert-warning">{{ r.error }}</div>
+					{% else %}
+						<div class="mb-2">Mean temperature: {{ r.stats.temperature.mean|default:'—' }}</div>
+						{% if r.trend %}
+						<img src="/static/{{ r.trend }}" class="img-fluid rounded" alt="trend">
+						{% endif %}
+					{% endif %}
+				</div>
+			</div>
+		</div>
+		{% endfor %}
+	</div>
+	{% endif %}
+{% endblock %}
+
+

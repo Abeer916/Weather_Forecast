@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+
+# Virtual env
+.venv/
+venv/
+ENV/
+
+# Django
+*.log
+local_settings.py
+media/
+staticfiles/
+
+# SQLite DB
+weather_forecast/db.sqlite3
+
+# Plots (generated)
+weather_forecast/weather_app/static/plots/*.png
+
+# OS
+.DS_Store
+Thumbs.db
+
+# VSCode / IDE
+.vscode/
+.idea/

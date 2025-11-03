@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Forecast • WeatherDash{% endblock %}
+{% block content %}
+	{% if error %}
+	<div class="alert alert-danger">{{ error }}</div>
+	{% else %}
+	<div class="d-flex align-items-center justify-content-between mb-3">
+		<h6 class="mb-0">7-day Temperature Forecast</h6>
+		<a href="/report/pdf/" class="btn btn-primary btn-sm">Download Report</a>
+	</div>
+	<div class="card shadow-sm">
+		<div class="card-body">
+			{% if predictions %}
+			<div class="table-responsive">
+				<table class="table table-sm">
+					<thead><tr><th>Date</th><th>Predicted Temperature (°C)</th></tr></thead>
+					<tbody>
+						{% for row in predictions %}
+						<tr>
+							<td>{{ row.date|date:'Y-m-d' }}</td>
+							<td>{{ row.predicted_temperature|floatformat:2 }}</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+			{% else %}
+			<div class="text-muted">Not enough data to compute a forecast.</div>
+			{% endif %}
+		</div>
+	</div>
+	{% endif %}
+{% endblock %}
+
+

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Analysis • WeatherDash{% endblock %}
+{% block content %}
+	{% if error %}
+	<div class="alert alert-danger">{{ error }}</div>
+	{% else %}
+	<div class="row g-3">
+		<div class="col-12 col-lg-6">
+			<div class="card shadow-sm h-100">
+				<div class="card-header fw-semibold">Temperature vs Humidity</div>
+				<div class="card-body d-flex align-items-center">
+					{% if plots.scatter %}
+					<img src="/static/{{ plots.scatter }}" alt="Scatter" class="img-fluid rounded">
+					{% else %}
+					<div class="text-muted">No temperature/humidity data available.</div>
+					{% endif %}
+				</div>
+			</div>
+		</div>
+		<div class="col-12 col-lg-6">
+			<div class="card shadow-sm h-100">
+				<div class="card-header fw-semibold">Correlation Heatmap</div>
+				<div class="card-body d-flex align-items-center">
+					{% if plots.corr %}
+					<img src="/static/{{ plots.corr }}" alt="Correlation Heatmap" class="img-fluid rounded">
+					{% else %}
+					<div class="text-muted">Not enough numeric data for correlations.</div>
+					{% endif %}
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="card shadow-sm mt-3">
+		<div class="card-header fw-semibold">Correlation Table</div>
+		<div class="card-body table-responsive">
+			{% if corr_headers and corr_rows %}
+			<table class="table table-sm align-middle">
+				<thead>
+					<tr>
+						<th scope="col"></th>
+						{% for h in corr_headers %}<th class="text-nowrap" scope="col">{{ h|capfirst }}</th>{% endfor %}
+					</tr>
+				</thead>
+				<tbody>
+					{% for row in corr_rows %}
+					<tr>
+						<th class="text-nowrap" scope="row">{{ row.name|capfirst }}</th>
+						{% for v in row.values %}<td>{{ v|floatformat:2 }}</td>{% endfor %}
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+			{% else %}
+			<div class="text-muted">No correlation matrix available.</div>
+			{% endif %}
+		</div>
+	</div>
+	{% endif %}
+{% endblock %}
+
+
