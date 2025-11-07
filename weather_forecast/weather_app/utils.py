@@ -205,19 +205,37 @@ def plot_correlation_heatmap(df: pd.DataFrame) -> str:
 def simple_forecast_linear(df: pd.DataFrame, days: int = 7) -> pd.DataFrame:
 	if "temperature" not in df.columns:
 		return pd.DataFrame(columns=["date", "predicted_temperature"]) 
-	df = df.dropna(subset=["temperature"]).copy()
-	df["t"] = (df["date"] - df["date"].min()).dt.days
-	x = df["t"].to_numpy(dtype=float)
-	y = df["temperature"].to_numpy(dtype=float)
-	if len(x) < 2:
-		return pd.DataFrame(columns=["date", "predicted_temperature"]) 
-	coeffs = np.polyfit(x, y, deg=1)
-	m, b = coeffs[0], coeffs[1]
-	last_day = int(df["t"].max())
-	future_days = np.arange(last_day + 1, last_day + 1 + days)
-	preds = m * future_days + b
-	start_date = df["date"].min()
-	future_dates = [start_date + timedelta(days=int(d)) for d in future_days]
+	# Use recent window to capture latest trend and avoid flattening
+	window_days = 90
+	df_recent = df.dropna(subset=["temperature"]).copy()
+	if len(df_recent) > window_days:
+		df_recent = df_recent.iloc[-window_days:]
+	# Scale time to [-1, 1] for numerical stability
+	t = (df_recent["date"] - df_recent["date"].min()).dt.days.astype(float)
+	if t.max() == 0:
+		# Not enough variation, return constant mean
+		mean_val = float(df_recent["temperature"].mean())
+		future_dates = [df_recent["date"].max() + timedelta(days=i) for i in range(1, days + 1)]
+		return pd.DataFrame({"date": future_dates, "predicted_temperature": [mean_val] * days})
+	t_scaled = 2 * (t - t.min()) / (t.max() - t.min()) - 1
+	y = df_recent["temperature"].to_numpy(dtype=float)
+	# Fit quadratic; fallback to linear if singular
+	try:
+		coeffs = np.polyfit(t_scaled, y, deg=2)
+		poly = np.poly1d(coeffs)
+	except Exception:
+		coeffs = np.polyfit(t_scaled, y, deg=1)
+		poly = np.poly1d(coeffs)
+	last_t = t.max()
+	future_raw = np.arange(last_t + 1, last_t + 1 + days, dtype=float)
+	future_scaled = 2 * (future_raw - t.min()) / (t.max() - t.min()) - 1
+	preds = poly(future_scaled)
+	# Clamp predictions to a sensible range based on recent history
+	y_min, y_max = float(np.min(y)), float(np.max(y))
+	pad = max(1.0, 0.15 * (y_max - y_min))
+	preds = np.clip(preds, y_min - pad, y_max + pad)
+	start_date = df_recent["date"].min()
+	future_dates = [start_date + timedelta(days=int(d)) for d in future_raw]
 	return pd.DataFrame({"date": future_dates, "predicted_temperature": preds})
 
 
